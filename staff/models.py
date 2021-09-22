@@ -83,6 +83,7 @@ class Hours_In(models.Model):
                                 blank=True)
     date = models.DateField()
     hours = models.FloatField()
+    overtime_hours = models.FloatField(default=0)
     day_type = models.CharField(
         max_length=5,
         choices=[
@@ -91,6 +92,7 @@ class Hours_In(models.Model):
             ('SHD', 'Special Holiday'),
             ('VL', 'Vacation Leave'),
             ('SL', 'Sick Leave'),
+            ('SPL', 'Single Parent Leave'),
         ],
         default='REG'
     )
@@ -144,11 +146,17 @@ class Bimonthly_In(models.Model):
         ]
     )
     hrs_reg = models.FloatField(default=0)
+    hrs_reg_over = models.FloatField(default=0)
     pay_reg = models.FloatField(default=0)
+
     hrs_hd = models.FloatField(default=0)
+    hrs_hd_over = models.FloatField(default=0)
     pay_hd = models.FloatField(default=0)
+
     hrs_shd = models.FloatField(default=0)
+    hrs_shd_over = models.FloatField(default=0)
     pay_shd = models.FloatField(default=0)
+
     hrs_vl = models.FloatField(default=0)
     pay_vl = models.FloatField(default=0)
     hrs_sl = models.FloatField(default=0)

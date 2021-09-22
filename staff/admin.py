@@ -253,7 +253,7 @@ class RoleAdmin(FilterBranchDropDown):
 @admin.register(Hours_In)
 class HoursInAdmin(HistoryFilterBranchSpecificStaffDropDown):
     ordering = ['-date', 'staff']
-    list_display = ['date', 'staff', 'branch', 'hours', 'day_type']
+    list_display = ['date', 'staff', 'branch', 'hours', 'overtime_hours', 'day_type']
     search_fields = ['staff__first_name', 'staff__last_name']
 
     def branch(self, obj):
@@ -336,11 +336,11 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
               'bene_a', 'bene_a_desc', 'bene_b', 'bene_b_desc', 'bene_c', 'bene_c_desc', 'bene_d', 'bene_d_desc',
               'ded_a', 'ded_a_desc', 'ded_b', 'ded_b_desc', 'ded_c', 'ded_c_desc', 'ded_d', 'ded_d_desc',
               'giv_a', 'giv_a_desc', 'giv_b', 'giv_b_desc', 'giv_c', 'giv_c_desc', 'giv_d', 'giv_d_desc']
-    fields = ['date', 'staff', 'day', 'pay_sss', 'pay_ph', 'pay_pi', 'pay_tot', 'extr_alw', 'hrs_reg', 'pay_reg', 'hrs_hd', 'pay_hd', 'pay_shd', 'hrs_shd', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl',
+    fields = ['date', 'staff', 'day', 'pay_sss', 'pay_ph', 'pay_pi', 'pay_tot', 'extr_alw', 'hrs_reg', 'hrs_reg_over', 'pay_reg', 'hrs_hd', 'hrs_hd_over', 'pay_hd', 'pay_shd', 'hrs_shd', 'hrs_shd_over', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl',
               'bene_a', 'bene_a_desc', 'bene_b', 'bene_b_desc', 'bene_c', 'bene_c_desc', 'bene_d', 'bene_d_desc',
               'ded_a', 'ded_a_desc', 'ded_b', 'ded_b_desc', 'ded_c', 'ded_c_desc', 'ded_d', 'ded_d_desc',
               'giv_a', 'giv_a_desc', 'giv_b', 'giv_b_desc', 'giv_c', 'giv_c_desc', 'giv_d', 'giv_d_desc']
-    readonly_fields = ['pay_tot', 'extr_alw', 'hrs_reg', 'pay_reg', 'pay_hd', 'hrs_hd', 'pay_shd', 'hrs_shd', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl']
+    readonly_fields = ['pay_tot', 'extr_alw', 'hrs_reg', 'hrs_reg_over', 'pay_reg', 'pay_hd', 'hrs_hd','hrs_hd_over', 'pay_shd', 'hrs_shd', 'hrs_shd_over', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl']
     actions = ['export', 'anull', 'bnull', 'cnull', 'automate_entries']
     list_filter = [
                    BimonthlyBranchFilter,
@@ -389,17 +389,20 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
         hrly_rate = obj.staff.roles.hrly_rate
 
         obj.hrs_reg = BimonthlyInAdmin.turn_zero(hours_in.filter(day_type='REG').aggregate(total=Sum('hours'))['total'])
-        obj.pay_reg = obj.hrs_reg * obj.staff.roles.hrly_rate
+        obj.hrs_reg_over = BimonthlyInAdmin.turn_zero(hours_in.filter(day_type='REG').aggregate(total=Sum('overtime_hours'))['total'])
+        obj.pay_reg = obj.hrs_reg * obj.staff.roles.hrly_rate + obj.hrs_reg_over * obj.staff.roles.hrly_rate * 1.25
         obj.pay_tot += obj.pay_reg
 
         hd_db = hours_in.filter(day_type='HD')
         obj.hrs_hd = BimonthlyInAdmin.turn_zero(hd_db.aggregate(total=Sum('hours'))['total'])
-        obj.pay_hd = obj.hrs_hd * hrly_rate * 2 + hrly_rate * 8 * hd_db.filter(hours=0).count()
+        obj.hrs_hd_over = BimonthlyInAdmin.turn_zero(hd_db.aggregate(total=Sum('overtime_hours'))['total'])
+        obj.pay_hd = obj.hrs_hd * hrly_rate * 2 + hrly_rate * 8 * hd_db.filter(hours=0).count() + obj.hrs_hd_over * hrly_rate * 2 * 1.3
         obj.pay_tot += obj.pay_hd
 
         shd_db = hours_in.filter(day_type='SHD')
         obj.hrs_shd = BimonthlyInAdmin.turn_zero(shd_db.aggregate(total=Sum('hours'))['total'])
-        obj.pay_shd = obj.hrs_shd * hrly_rate * 1.3 # + hrly_rate * 8 * shd_db.filter(hours=0).count()
+        obj.hrs_shd_over = BimonthlyInAdmin.turn_zero(shd_db.aggregate(total=Sum('overtime_hours'))['total'])
+        obj.pay_shd = obj.hrs_shd * hrly_rate * 1.3 + obj.hrs_shd_over * hrly_rate * 1.3 * 1.3
         obj.pay_tot += obj.pay_shd
 
         vl_db = hours_in.filter(day_type='VL')
