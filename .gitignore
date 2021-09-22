@@ -1,0 +1,6 @@
+db.sqlite3
+venv
+__pycache__
+migrations
+TO_DO.md
+backup/
