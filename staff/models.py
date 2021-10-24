@@ -148,14 +148,17 @@ class Bimonthly_In(models.Model):
     hrs_reg = models.FloatField(default=0)
     hrs_reg_over = models.FloatField(default=0)
     pay_reg = models.FloatField(default=0)
+    pay_reg_over = models.FloatField(default=0)
 
     hrs_hd = models.FloatField(default=0)
     hrs_hd_over = models.FloatField(default=0)
     pay_hd = models.FloatField(default=0)
+    pay_hd_over = models.FloatField(default=0)
 
     hrs_shd = models.FloatField(default=0)
     hrs_shd_over = models.FloatField(default=0)
     pay_shd = models.FloatField(default=0)
+    pay_shd_over = models.FloatField(default=0)
 
     hrs_vl = models.FloatField(default=0)
     pay_vl = models.FloatField(default=0)
