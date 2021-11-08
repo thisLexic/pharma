@@ -164,6 +164,8 @@ class Bimonthly_In(models.Model):
     pay_vl = models.FloatField(default=0)
     hrs_sl = models.FloatField(default=0)
     pay_sl = models.FloatField(default=0)
+    hrs_spl = models.FloatField(default=0)
+    pay_spl = models.FloatField(default=0)
 
     pay_tot = models.FloatField()
     extr_alw = models.FloatField(default=0)

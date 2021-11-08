@@ -40,9 +40,9 @@ https://stackoverflow.com/questions/24311993/how-to-add-a-new-field-to-a-model-w
 
 ssh username@ip_address
 
-FROM: scp username@ip_address:remote_path local_path
+COPY TO SERVER: scp local_path username@ip_address:remote_path
 
-TO: scp username@ip_address:remote_path local_path
+COPY TO LOCAL MACHINE: scp username@ip_address:remote_path local_path
 
 ## Updating the Server without Changing Database Schema
 
@@ -55,6 +55,7 @@ service apache2 restart
 _backup your database_
 _backup your files to be editted_
 _double check differences bw new/old files_
+_perform update on file/s_
 
 source venv/bin/activate
 

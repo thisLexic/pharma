@@ -336,15 +336,15 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
     change_list_template = "admin/utils/change_list.html"
     totalsum_list = ('pay_tot', 'pay_reg', 'pay_hd', 'pay_shd')
     ordering = ['-date', 'staff']
-    list_display = ['date', 'staff', 'branch', 'day', 'pay_sss', 'pay_ph', 'pay_pi', 'pay_tot', 'extr_alw', 'hrs_reg', 'pay_reg', 'hrs_hd', 'pay_hd', 'pay_shd', 'hrs_shd', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl',
+    list_display = ['date', 'staff', 'branch', 'day', 'pay_sss', 'pay_ph', 'pay_pi', 'pay_tot', 'extr_alw', 'hrs_reg', 'pay_reg', 'hrs_hd', 'pay_hd', 'pay_shd', 'hrs_shd', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl', 'pay_sl', 'hrs_spl',
               'bene_a', 'bene_a_desc', 'bene_b', 'bene_b_desc', 'bene_c', 'bene_c_desc', 'bene_d', 'bene_d_desc',
               'ded_a', 'ded_a_desc', 'ded_b', 'ded_b_desc', 'ded_c', 'ded_c_desc', 'ded_d', 'ded_d_desc',
               'giv_a', 'giv_a_desc', 'giv_b', 'giv_b_desc', 'giv_c', 'giv_c_desc', 'giv_d', 'giv_d_desc']
-    fields = ['date', 'staff', 'day', 'pay_sss', 'pay_ph', 'pay_pi', 'pay_tot', 'extr_alw', 'hrs_reg', 'hrs_reg_over', 'pay_reg', 'hrs_hd', 'hrs_hd_over', 'pay_hd', 'pay_shd', 'hrs_shd', 'hrs_shd_over', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl',
+    fields = ['date', 'staff', 'day', 'pay_sss', 'pay_ph', 'pay_pi', 'pay_tot', 'extr_alw', 'hrs_reg', 'hrs_reg_over', 'pay_reg', 'hrs_hd', 'hrs_hd_over', 'pay_hd', 'pay_shd', 'hrs_shd', 'hrs_shd_over', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl', 'pay_sl', 'hrs_spl',
               'bene_a', 'bene_a_desc', 'bene_b', 'bene_b_desc', 'bene_c', 'bene_c_desc', 'bene_d', 'bene_d_desc',
               'ded_a', 'ded_a_desc', 'ded_b', 'ded_b_desc', 'ded_c', 'ded_c_desc', 'ded_d', 'ded_d_desc',
               'giv_a', 'giv_a_desc', 'giv_b', 'giv_b_desc', 'giv_c', 'giv_c_desc', 'giv_d', 'giv_d_desc']
-    readonly_fields = ['pay_tot', 'extr_alw', 'hrs_reg', 'hrs_reg_over', 'pay_reg', 'pay_hd', 'hrs_hd','hrs_hd_over', 'pay_shd', 'hrs_shd', 'hrs_shd_over', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl']
+    readonly_fields = ['pay_tot', 'extr_alw', 'hrs_reg', 'hrs_reg_over', 'pay_reg', 'pay_hd', 'hrs_hd','hrs_hd_over', 'pay_shd', 'hrs_shd', 'hrs_shd_over', 'pay_vl', 'hrs_vl', 'pay_sl', 'hrs_sl', 'pay_sl', 'hrs_spl']
     actions = ['export', 'anull', 'bnull', 'cnull', 'automate_entries']
     list_filter = [
                    BimonthlyBranchFilter,
@@ -408,8 +408,8 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
         shd_db = hours_in.filter(day_type='SHD')
         obj.hrs_shd = BimonthlyInAdmin.turn_zero(shd_db.aggregate(total=Sum('hours'))['total'])
         obj.hrs_shd_over = BimonthlyInAdmin.turn_zero(shd_db.aggregate(total=Sum('overtime_hours'))['total'])
-        obj.pay_shd = obj.hrs_shd * hrly_rate * 1.3 + obj.hrs_shd_over * hrly_rate * 1.95
-        obj.pay_shd_over = obj.hrs_shd_over * hrly_rate * 1.95
+        obj.pay_shd = obj.hrs_shd * hrly_rate * 1.3
+        obj.pay_shd_over = obj.hrs_shd_over * hrly_rate * 1.69
         obj.pay_tot += obj.pay_shd
 
                       
@@ -422,6 +422,11 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
         obj.hrs_sl = len(sl_db) * 8
         obj.pay_sl = obj.hrs_sl * hrly_rate
         obj.pay_tot += obj.pay_sl
+
+        spl_db = hours_in.filter(day_type='SPL')
+        obj.hrs_spl = len(spl_db) * 8
+        obj.pay_spl = obj.hrs_spl * hrly_rate
+        obj.pay_tot += obj.pay_spl
 
         # old extra allowance pay
         # obj.extr_alw = obj.staff.roles.hrly_allow * obj.hrs_reg
@@ -499,11 +504,11 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
         nextPage = False
         for bimonthly_in in queryset:
             if nextPage:
-                loc = 100
+                loc = 80
                 top_loc = 400
             else:
                 p.setFont('Times-Bold', 8)
-                loc = 520
+                loc = 500
                 top_loc = 820
 
             year = bimonthly_in.date.year
@@ -543,6 +548,7 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
             BimonthlyInAdmin.add_not_null_zero(data_in, "Extra Allowance", bimonthly_in.extr_alw, total_in, spaces_in=spaces_in)
             BimonthlyInAdmin.add_not_null_zero(data_in, "Vacation Leave", bimonthly_in.pay_vl, total_in, spaces_in=spaces_in, hours=bimonthly_in.hrs_vl)
             BimonthlyInAdmin.add_not_null_zero(data_in, "Sick Leave", bimonthly_in.pay_sl, total_in, spaces_in=spaces_in, hours=bimonthly_in.hrs_sl)
+            BimonthlyInAdmin.add_not_null_zero(data_in, "Single Parent Leave", bimonthly_in.pay_spl, total_in, spaces_in=spaces_in, hours=bimonthly_in.hrs_spl)
             BimonthlyInAdmin.add_not_null_zero(data_in, bimonthly_in.bene_a_desc, bimonthly_in.bene_a, total_in, spaces_in=spaces_in)
             BimonthlyInAdmin.add_not_null_zero(data_in, bimonthly_in.bene_b_desc, bimonthly_in.bene_b, total_in, spaces_in=spaces_in)
             BimonthlyInAdmin.add_not_null_zero(data_in, bimonthly_in.bene_c_desc, bimonthly_in.bene_c, total_in, spaces_in=spaces_in)
@@ -700,17 +706,23 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
             hrly_rate = obj.staff.roles.hrly_rate
 
             obj.hrs_reg = BimonthlyInAdmin.turn_zero(hours_in.filter(day_type='REG').aggregate(total=Sum('hours'))['total'])
+            obj.hrs_reg_over = BimonthlyInAdmin.turn_zero(hours_in.filter(day_type='REG').aggregate(total=Sum('overtime_hours'))['total'])
             obj.pay_reg = obj.hrs_reg * obj.staff.roles.hrly_rate
+            obj.pay_reg_over = obj.hrs_reg_over * obj.staff.roles.hrly_rate * 1.25
             obj.pay_tot += obj.pay_reg
 
             hd_db = hours_in.filter(day_type='HD')
             obj.hrs_hd = BimonthlyInAdmin.turn_zero(hd_db.aggregate(total=Sum('hours'))['total'])
+            obj.hrs_hd_over = BimonthlyInAdmin.turn_zero(hd_db.aggregate(total=Sum('overtime_hours'))['total'])
             obj.pay_hd = obj.hrs_hd * hrly_rate * 2 + hrly_rate * 8 * hd_db.filter(hours=0).count()
+            obj.pay_hd_over = obj.hrs_hd_over * hrly_rate * 2 * 1.3
             obj.pay_tot += obj.pay_hd
 
             shd_db = hours_in.filter(day_type='SHD')
             obj.hrs_shd = BimonthlyInAdmin.turn_zero(shd_db.aggregate(total=Sum('hours'))['total'])
-            obj.pay_shd = obj.hrs_shd * hrly_rate * 1.3 # + hrly_rate * 8 * shd_db.filter(hours=0).count()
+            obj.hrs_shd_over = BimonthlyInAdmin.turn_zero(shd_db.aggregate(total=Sum('overtime_hours'))['total'])
+            obj.pay_shd = obj.hrs_shd * hrly_rate * 1.3
+            obj.pay_shd_over = obj.hrs_shd_over * hrly_rate * 1.69
             obj.pay_tot += obj.pay_shd
 
             vl_db = hours_in.filter(day_type='VL')
@@ -722,6 +734,11 @@ class BimonthlyInAdmin(TotalsumAdmin, FilterBranchSpecificStaffDropDown):
             obj.hrs_sl = len(sl_db) * 8
             obj.pay_sl = obj.hrs_sl * hrly_rate
             obj.pay_tot += obj.pay_sl
+
+            spl_db = hours_in.filter(day_type='SPL')
+            obj.hrs_spl = len(spl_db) * 8
+            obj.pay_spl = obj.hrs_spl * hrly_rate
+            obj.pay_tot += obj.pay_spl
 
             # extra allowance pay pay
             obj.extr_alw = obj.staff.roles.hrly_allow * obj.hrs_reg
